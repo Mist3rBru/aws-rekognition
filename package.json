@@ -1,0 +1,23 @@
+{
+  "name": "aws-rekognition",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "sls offline start --host 0.0.0.0",
+    "invoke": "sls invoke -f img-analysis",
+    "invoke:local": "sls invoke local -f img-analysis",
+    "test": "IS_OFFLINE=true jest --runInBand --no-cache",
+    "test:w": "npm test -- --watchAll",
+    "docker": "docker-compose up",
+    "docker:app": "npm run docker -- --build app",
+    "docker:tests": "npm run docker -- --build tests"
+  },
+  "dependencies": {
+    "aws-sdk": "~2.1272.0",
+    "axios": "^1.2.1"
+  },
+  "devDependencies": {
+    "jest": "^29.3.1",
+    "serverless": "~3.25.1"
+  }
+}
+

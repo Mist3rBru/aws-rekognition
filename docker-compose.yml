@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  localstack:
+    container_name: 'localstack'
+    image: localstack/localstack:1.0.4
+    ports:
+      - '4566:4566'
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+  app:
+    container_name: app
+    image: app
+    build:
+      dockerfile: ./Dockerfile
+      target: base
+      context: .
+    restart: on-failure
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/app
+      - nodemodules:/app/node_modules
+    environment:
+      LOCALSTACK_HOST: localstack
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      - localstack
+    command: npm run dev
+
+  tests:
+    container_name: tests
+    image: tests
+    build:
+      dockerfile: ./Dockerfile
+      target: tests
+      context: .
+    restart: on-failure
+    volumes:
+      - .:/app/src
+      - nodemodules:/app/node_modules
+    environment:
+      LOCALSTACK_HOST: localstack
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    depends_on:
+      - localstack
+    command: npm run test:w
+
+volumes:
+  nodemodules:
+
