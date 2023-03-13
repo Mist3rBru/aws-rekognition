@@ -1,17 +1,21 @@
-const { describe, it, expect } = require('@jest/globals')
+import aws from 'aws-sdk'
+import { fromPartial } from '@total-typescript/mock-utils'
+import router from '@/router'
+
+const requestMock = {
+  queryStringParameters: {
+    imageUrl: 'https://www.doglife.com.br/site/assets/images/cao.png'
+  }
+}
 jest.setTimeout(1e4) // 10 secs
 
-const aws = require('aws-sdk')
 aws.config.update({
   region: 'us-east-1'
 })
 
-const requestMock = require('./../mocks/request.json')
-const { main } = require('../../src')
-
 describe('Image analyser', () => {
   it('should analyze successfully the image returning the results', async () => {
-    const result = await main(requestMock)
+    const result = await router.main(fromPartial(requestMock))
 
     const finalText = [
       '99.68% de ser do tipo Golden Retriever',
@@ -29,9 +33,11 @@ describe('Image analyser', () => {
   })
 
   it('should return status 400 on empty queryString', async () => {
-    const result = await main({
-      queryStringParameters: {}
-    })
+    const result = await router.main(
+      fromPartial({
+        queryStringParameters: {}
+      })
+    )
     const expected = {
       statusCode: 400,
       body: 'an IMG is required!'
@@ -41,11 +47,13 @@ describe('Image analyser', () => {
   })
 
   it('should return 500 on invalid ImageURL', async () => {
-    const result = await main({
-      queryStringParameters: {
-        imageUrl: 'invalid'
-      }
-    })
+    const result = await router.main(
+      fromPartial({
+        queryStringParameters: {
+          imageUrl: 'invalid'
+        }
+      })
+    )
     const expected = {
       statusCode: 500,
       body: 'Internal Server Error!'
@@ -54,4 +62,3 @@ describe('Image analyser', () => {
     expect(result).toStrictEqual(expected)
   })
 })
-

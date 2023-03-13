@@ -1,29 +1,31 @@
-const axios = require('axios')
+import { APIGatewayEvent } from 'aws-lambda'
+import { Rekognition, Translate } from 'aws-sdk'
+import axios from 'axios'
 
-module.exports = class Handler {
-  constructor({ rekoSvc, translatorSvc }) {
-    this.rekoSvc = rekoSvc
-    this.translatorSvc = translatorSvc
-  }
+export class Handler {
+  constructor(
+    private readonly recognition: Rekognition,
+    private readonly translator: Translate
+  ) {}
 
-  async getImageBuffer(imageUrl) {
-    const response = await axios.get(imageUrl, {
+  async getImageBuffer(imageUrl: string) {
+    const response = await axios.get<ArrayBuffer>(imageUrl, {
       responseType: 'arraybuffer'
     })
-    const buffer = Buffer.from(response.data, 'base64')
+    const buffer = Buffer.from(response.data)
     return buffer
   }
 
-  async detectImageLabels(buffer) {
-    const result = await this.rekoSvc
+  async detectImageLabels(buffer: Buffer) {
+    const result = await this.recognition
       .detectLabels({
         Image: {
           Bytes: buffer
         }
       })
       .promise()
-    const workingItems = result.Labels.filter(
-      ({ Confidence }) => Confidence > 80
+    const workingItems = result!.Labels!.filter(
+      ({ Confidence }) => Confidence && Confidence > 80
     )
 
     const names = workingItems.map(({ Name }) => Name).join(' and ')
@@ -33,23 +35,23 @@ module.exports = class Handler {
     }
   }
 
-  async translateText(text) {
+  async translateText(text: string) {
     const params = {
       SourceLanguageCode: 'en',
       TargetLanguageCode: 'pt',
       Text: text
     }
-    const { TranslatedText } = await this.translatorSvc
+    const { TranslatedText } = await this.translator
       .translateText(params)
       .promise()
     return TranslatedText.split(' e ')
   }
 
-  formatTextResults(texts, workingItems) {
+  formatTextResults(texts: string[], workingItems: Rekognition.Label[]) {
     const finalText = []
     for (const indexText in texts) {
       const nameInPortuguese = texts[indexText]
-      const confidence = workingItems[indexText].Confidence
+      const confidence = workingItems[indexText].Confidence!
       finalText.push(
         `${confidence.toFixed(2)}% de ser do tipo ${nameInPortuguese}`
       )
@@ -58,10 +60,10 @@ module.exports = class Handler {
     return finalText.join('\n')
   }
 
-  async main(event) {
+  async main(event: APIGatewayEvent) {
     console.log('event', event)
     try {
-      const { imageUrl } = event.queryStringParameters
+      const imageUrl = event.queryStringParameters?.imageUrl
       if (!imageUrl) {
         return {
           statusCode: 400,
@@ -91,4 +93,3 @@ module.exports = class Handler {
     }
   }
 }
-

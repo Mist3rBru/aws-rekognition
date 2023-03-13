@@ -9,18 +9,18 @@ provider:
   iam:
     role:
       statements:
-      - Effect: Allow
-        Action:
-          - rekognition:DetectLabels
-        Resource: "*"
-      - Effect: Allow
-        Action:
-          - translate:TranslateText
-        Resource: "*"
+        - Effect: Allow
+          Action:
+            - rekognition:DetectLabels
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - translate:TranslateText
+          Resource: '*'
 
 functions:
   img-analysis:
-    handler: src/index.main
+    handler: dist/router.main
     events:
       - httpApi:
           path: /analyze

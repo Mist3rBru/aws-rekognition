@@ -2,9 +2,16 @@ module.exports = {
   bail: true,
   roots: ['<rootDir>/__tests__'],
   clearMocks: true,
+  maxWorkers: 1,
   collectCoverage: false,
-  collectCoverageFrom: ['src/**/*.js'],
-  coverageDirectory: 'coverage',
+  collectCoverageFrom: ['src/**/*.ts'],
   testEnvironment: 'node',
-  testPathIgnorePatterns: ['mock*']
+  transform: {
+    '^.+\\.(t|j)sx?$': '@swc/jest'
+  },
+  moduleNameMapper: {
+    '@/tests/(.*)': '<rootDir>/__tests__/$1',
+    '@/(.*)': '<rootDir>/src/$1'
+  },
+  testRegex: ['__tests__/.+(spec|test).ts']
 }

@@ -1,7 +1,5 @@
 node_modules/
-.serverless/
 dist/
 
 package-lock.json
-yarn.lock
 pnpm-lock.yaml
